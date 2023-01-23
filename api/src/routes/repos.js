@@ -11,37 +11,71 @@ repos.get('/', async (req, res) => {
 
   res.status(200);
 
-  /**
-   * make call for local and remote repositories
-   * combine arrays and filter
-   * return as json response
-   */
-
   const remoteRepos = await getGithubRepos();
   const localRepos = await getServerRepos();
-  const filteredCollection = processRepos([...remoteRepos, ...localRepos]);
+
+  if (remoteRepos.status !== 200) {
+    res.status(remoteRepos.status);
+    res.json({ message: remoteRepos.message });
+  }
+  if (localRepos.status !== 200) {
+    res.status(localRepos.status);
+    res.json({ message: localRepos.message });
+  }
+
+  const filteredCollection = processRepos([
+    ...remoteRepos.data,
+    ...localRepos.data,
+  ]);
 
   res.json(filteredCollection);
 });
 
 /**
  * Access remote repositories from github api
- * @returns array of repos
+ * @returns {status: "code", data: "request data", message: "response context"}
  */
 async function getGithubRepos() {
-  const remoteRepos = await axios(
-    'https://api.github.com/users/silverorange/repos'
-  );
-  return remoteRepos.data;
+  try {
+    const remoteRepos = await axios(
+      'https://api.github.com/users/silverorange/repos'
+    );
+    return {
+      status: 200,
+      data: remoteRepos.data,
+      message: `Successfully retrieved github repos`,
+    };
+  } catch (error) {
+    return {
+      status: error.status,
+      data: error.data,
+      message: `Failed to retrieve repos from github`,
+    };
+  }
 }
 
 /**
  * Access local repositories from data
- * @returns array of repos
+ * @returns {status: "code", data: "request data", message: "response context"}
+ *
  */
 async function getServerRepos() {
-  const localRepos = await axios.get('http://localhost:4000/repos/repos.json');
-  return localRepos.data;
+  try {
+    const localRepos = await axios.get(
+      'http://localhost:4000/repos/repos.json'
+    );
+    return {
+      status: 200,
+      data: localRepos.data,
+      message: 'Successfully retrieved local repos',
+    };
+  } catch (error) {
+    return {
+      status: error.status,
+      data: error.data,
+      message: `Failed to retrieve repos from local server data`,
+    };
+  }
 }
 
 /**
