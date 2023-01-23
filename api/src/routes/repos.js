@@ -1,8 +1,10 @@
-import { Router, Request, Response } from 'express';
-import dataRepos from '../../data/repos.json'; //only read on server start
+import express, { Router, Request, Response } from 'express';
+import axios from 'axios';
+// import dataRepos from '../../data/repos.json'; //only read on server start
 export const repos = Router();
 
-//I've never used Typescript before and couldn't get it to work quickly
+//I'm not sure if express.static caches content on first load
+repos.use(express.static('data'));
 
 repos.get('/', async (req, res) => {
   res.header('Cache-Control', 'no-store');
@@ -16,7 +18,7 @@ repos.get('/', async (req, res) => {
    */
 
   // const remoteRepos = getGithubRepos();
-  const localRepos = getServerRepos();
+  const localRepos = await getServerRepos();
   console.log(localRepos);
   const filteredCollection = processRepos(localRepos);
 
@@ -30,8 +32,9 @@ function getGithubRepos() {
 }
 
 // Access local repositories from data
-function getServerRepos() {
-  return dataRepos; // 🚧 This needs to be replaced with a call
+async function getServerRepos() {
+  const localRepos = await axios.get('http://localhost:4000/repos/repos.json');
+  return localRepos.data;
 }
 
 //aggregate and filter repos
