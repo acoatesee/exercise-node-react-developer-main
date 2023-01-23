@@ -17,27 +17,38 @@ repos.get('/', async (req, res) => {
    * return as json response
    */
 
-  // const remoteRepos = getGithubRepos();
+  const remoteRepos = await getGithubRepos();
   const localRepos = await getServerRepos();
-  console.log(localRepos);
-  const filteredCollection = processRepos(localRepos);
+  const filteredCollection = processRepos([...remoteRepos, ...localRepos]);
 
   res.json(filteredCollection);
 });
 
-// Access remote repositories from github api
-function getGithubRepos() {
-  // make call to github api
-  return [];
+/**
+ * Access remote repositories from github api
+ * @returns array of repos
+ */
+async function getGithubRepos() {
+  const remoteRepos = await axios(
+    'https://api.github.com/users/silverorange/repos'
+  );
+  return remoteRepos.data;
 }
 
-// Access local repositories from data
+/**
+ * Access local repositories from data
+ * @returns array of repos
+ */
 async function getServerRepos() {
   const localRepos = await axios.get('http://localhost:4000/repos/repos.json');
   return localRepos.data;
 }
 
-//aggregate and filter repos
+/**
+ *
+ * @param {Array} repoCollection array of repos
+ * @returns array of repos excluding forked repositories
+ */
 function processRepos(repoCollection) {
   return repoCollection.filter((repo) => repo.fork === false);
 }
