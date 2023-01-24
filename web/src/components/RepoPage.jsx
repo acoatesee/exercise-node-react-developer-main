@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function RepoPage({ repo }) {
   const [lastCommit, setLastCommit] = useState({});
@@ -46,7 +47,12 @@ export default function RepoPage({ repo }) {
   }, [repo]);
 
   return (
-    <div>
+    <div
+      style={{
+        margin: '10rem',
+        textAlign: 'left',
+      }}
+    >
       RepoPage <br />
       {loading && 'loading'}
       {error}
@@ -59,7 +65,9 @@ export default function RepoPage({ repo }) {
         </div>
       </>
       <br />
-      <div>{readme}</div>
+      <div>
+        <ReactMarkdown>{readme}</ReactMarkdown>
+      </div>
     </div>
   );
 }
