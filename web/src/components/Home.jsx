@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
+import RepoPage from './RepoPage';
 
 // on load get repos from backend then display content
 export default function Home() {
@@ -8,6 +9,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [failCount, setFailCount] = useState(0);
+
+  const [activeRepo, setActiveRepo] = useState();
   // const [languages, setLanuages] = useState();
 
   const maxFailures = 5;
@@ -49,15 +52,15 @@ export default function Home() {
           {repos.map((repo) => {
             return (
               <div key={repo.id} style={{ display: 'block' }}>
-                <Link
-                  to={`/${repo.id}`}
-                  state={{ repo }}
-                >{`${repo.name} | ${repo.description} | ${repo.language} | ${repo.forks}`}</Link>
+                <button
+                  onClick={() => setActiveRepo(repo)}
+                >{`${repo.name} | ${repo.description} | ${repo.language} | ${repo.forks}`}</button>
               </div>
             );
           })}
         </>
       )}
+      {activeRepo && <RepoPage repo={activeRepo} />}
     </div>
   );
 }
