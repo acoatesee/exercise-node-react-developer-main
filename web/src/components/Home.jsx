@@ -7,24 +7,33 @@ export default function Home() {
   const [repos, setRepos] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [failCount, setFailCount] = useState(0);
+  // const [languages, setLanuages] = useState();
 
-  async function loadRepos() {
-    setError('');
-    setLoading(true);
-    try {
-      const response = await (
-        await axios.get('http://localhost:4000/repos/')
-      ).data;
-      setRepos(() => response);
-    } catch (err) {
-      setError(() => err.message);
-    }
-    setLoading(false);
-  }
+  const maxFailures = 5;
 
   useEffect(() => {
-    loadRepos();
-  }, []);
+    async function loadRepos() {
+      setError(failCount > 0 ? `Error, Retrying...${failCount}` : '');
+      setLoading(true);
+      try {
+        const response = await (
+          await axios.get('http://localhost:4000/repos/')
+        ).data;
+        setRepos(() => response);
+        setError('');
+      } catch (err) {
+        setFailCount((count) => count + 1);
+        setError(() => err.message);
+      }
+      setLoading(false);
+    }
+
+    if (failCount < maxFailures) {
+      loadRepos();
+    }
+  }, [failCount]);
+
   return (
     <div>
       <strong>Repositories for silverorange</strong>
@@ -32,6 +41,9 @@ export default function Home() {
       {loading && 'loading'}
       {error}
       <br />
+      {maxFailures === 3 && (
+        <button onClick={() => setFailCount(0)}>Try Again</button>
+      )}
       {repos && (
         <>
           {repos.map((repo) => {
@@ -39,6 +51,7 @@ export default function Home() {
               <div key={repo.id} style={{ display: 'block' }}>
                 <Link
                   to={`/${repo.id}`}
+                  state={{ repo }}
                 >{`${repo.name} | ${repo.description} | ${repo.language} | ${repo.forks}`}</Link>
               </div>
             );
